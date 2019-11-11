@@ -3,3 +3,6 @@ dans l'algo 2 - pas de tests sur les differentes sizes, why ?
 diviser par 64 au lieu de se déplacer de 8 en 8
 
 dans algo 3 test nfa bounding box, avec X*Y (au lieu de Bx*By ?)
+
+marche pas sur image trop lisse
+marche pas sur image basse qualité

@@ -7,16 +7,34 @@ import matplotlib.pyplot as plt
 
 
 
-def dct2(block):
-    return dct(dct(block.T, norm='ortho').T, norm='ortho')
+def dct2(block,cos_t):
+  dct_num=np.zeros(block.shape)
+  dct_test = dct(dct(block.T, norm='ortho').T, norm='ortho')
+  # for i in range(8): #### Sanity check
+  #   for j in range(8):
+  #     if(i+j>0):
+  #       for xx in range(8):
+  #         for yy in range(8):
+  #           dct_num[i,j]+= block[xx,yy]*cos_t[xx][i]*cos_t[yy][j]
+  #       if(i==0):
+  #         dct_num[i,j]/= np.sqrt(2)
+  #       if(j==0):
+  #         dct_num[i,j]*= 1/np.sqrt(2)
+  #       dct_num[i,j]*= 0.25
+  #       print(dct_num[i,j]-dct_test[i,j])
+
+  return dct_test
 
 def computeVotes(L):
   votes=np.full(L.shape,-1)
   zeros=np.zeros(L.shape)
-  for i in tqdm.tqdm(range(L.shape[0]-8)):
-    for j in range(L.shape[1]-8):
-      d=dct2(L[i:i+8,j:j+8])
-
+  cos_t=np.zeros((8,8))
+  for i in range(8):
+    for j in range(8):
+      cos_t[i,j]=np.cos((2*i+1.0)*j*np.pi/16)
+  for i in tqdm.tqdm(range(L.shape[0]-7)):
+    for j in range(L.shape[1]-7):
+      d=dct2(L[i:i+8,j:j+8],cos_t)
       z=np.sum(abs(d)<0.5)
 
       for x in range(i,i+8):
@@ -29,8 +47,7 @@ def computeVotes(L):
   return votes
 
 def getLuminance(I):
-    # GET IT OUT
-    return np.transpose(np.average(image,2,weights=[0.2126,0.7152,0.0722]).astype("float32"))
+    return np.average(image,2,weights=[0.2126,0.7152,0.0722]).astype("float32")
 
 def binomTail(n,k,p):
     sum = 0
@@ -57,14 +74,15 @@ def regionGrowing(votes,seed,W):
     region= [seed]
     while len(queue)>0 :
         x,y=queue.pop(0)
-        for i in range(int(-W/2),int(W/2)+1):
-            for j in range(int(-W/2),int(W/2)+1):
+        visited[x,y]=True
+        for i in range(-W,W+1):
+            for j in range(-W,W+1):
                 if (i==0 and j==0) or x+i<0 or x+i>=np.shape(votes)[0] \
                 or y+j<0 or y+j>= np.shape(votes)[1]:
                     continue
-                elif not visited[x,y] and votes[x+i,y+j]==votes[x,y] :
-                    region.append([x+i,y+j])
+                elif not visited[x+i,y+j] and votes[x+i,y+j]==votes[x,y] :
                     visited[x+i,y+j]=True
+                    region.append([x+i,y+j])
                     queue.append([x+i,y+j])
     return region
 
@@ -95,34 +113,38 @@ def forgeryDetection(votes,G,W):
                 if len(R)<4:
                     continue
                 xmin,xmax,ymin,ymax = BoundingBox(R)
-                Bx =  (xmax-xmin)
-                By = ymax-ymin
-                N = max(xmax-xmin,ymax-ymin)
-                card = (xmax-xmin)*(ymax-ymin)
-                # NFA = 64 *X*Y*np.sqrt(X*Y)*binomTail(int(N*N/64),int(card/64),1/64)
-                NFA = 64 *Bx*By*np.sqrt(Bx*By)*binomTail(int(N*N/64),int(card/64),1/64)
+                Bx =  (xmax-xmin)+1
+                By = ymax-ymin+1
+                N = max(xmax-xmin+1,ymax-ymin+1)
+                card = len(R)
+                #NFA = 64 *X*Y*np.sqrt(X*Y)*binomTail(int(N*N/64),int(card/64),1/64) formule fausse du papier
+                NFA = 64 *Bx*By*np.sqrt(Bx*By)*binomTail(int(N*N/64),int(card/64),1/64.0)
                 if NFA < 1 :
-                    forgerMask[np.transpose(R)]=True
-                #     for i in R:
-                #         forgerMask[i]=True
-                # for i in R :
-                #     votes[i] = -1
+                    # forgerMask[np.transpose(R)]=True
+                    for i,j in R:
+                        forgerMask[i,j]=True
+                for i,j in R :
+                    votes[i,j] = -1
 
                     # forgerMask[np.transpose(R)]=True
-                votes[np.transpose(R)]=-1
     return forgerMask
 
 
 
 if __name__=="__main__":
-  image=cv2.imread("./0.jpg", cv2.IMREAD_UNCHANGED)
-  image=image[1:]
+  image=cv2.imread("./im2gimp.jpg", cv2.IMREAD_UNCHANGED)
+  image=image[:,4:]
   G,value,votes = gridDetection(image)
   if G==-1 :
       print("ERREUR")
   else :
+      print(f"Meilleur vote {G}")
       mask = forgeryDetection(votes,G,12)
-      print(mask)
-      print(np.where(mask))
-      plt.imshow(mask*255)
+      # print(votes)
+      plt.figure(2)
+      plt.imshow(mask)
+      plt.figure(0)
+      plt.imshow(votes)
+      plt.figure(1)
+      plt.imshow(votes==-1)
       plt.show()
