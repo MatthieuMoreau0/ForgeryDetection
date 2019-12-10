@@ -102,8 +102,13 @@ def gridDetection(I):
   NFA (float): value of the NFA for that grid
   votes (array of int with shape (w,h)): best grid for each pixel
   '''
-  X,Y,C = np.shape(I)
-  L = getLuminance(I)
+  X=np.shape(I)[0]
+  Y=np.shape(I)[1]
+  if(len(np.shape(I))==3):
+    L = getLuminance(I)
+  else:
+    L=I
+  # X,Y,C = np.shape(I)
   votes = computeVotes(L)
   histo = np.histogram(votes,range(-1,65))
   bestGrid = np.argmax(histo[0][1:])
@@ -209,7 +214,7 @@ def forgeryDetection(votes,G,W):
 
 
 if __name__=="__main__":
-  image=cv2.imread("./im2gimp.jpg", cv2.IMREAD_UNCHANGED)
+  image=cv2.imread("./tampered2.ppm", cv2.IMREAD_UNCHANGED)
   image=image[:,4:]
   print(image.shape)
   G,value,votes = gridDetection(image)
