@@ -111,10 +111,11 @@ def gridDetection(I):
   # X,Y,C = np.shape(I)
   votes = computeVotes(L)
   histo = np.histogram(votes,range(-1,65))
-  bestGrid = np.argmax(histo[0][1:])
-  bestValue = np.max(histo[0])
+  bestGrid = np.argmax(histo[0][1:]) ##ignore votes=-1 on the histogram
+  bestValue = np.max(histo[0][1:])
 
-  NFA = 64*X*Y*np.sqrt(X*Y)*binomTail(int(X*Y/64),int(bestValue/64),1/64.)
+  NFA = 64*X*Y*np.sqrt(X*Y)*binomTail(int(X*Y/64),int(bestValue/64.),1/64.)
+  print("best grid NFA", NFA)
   if NFA<1 :
       return bestGrid,NFA,votes
   else :
@@ -214,7 +215,7 @@ def forgeryDetection(votes,G,W):
 
 
 if __name__=="__main__":
-  image=cv2.imread("./tampered2.ppm", cv2.IMREAD_UNCHANGED)
+  image=cv2.imread("./tampered1.pgm", cv2.IMREAD_UNCHANGED)
   image=image[:,4:]
   print(image.shape)
   G,value,votes = gridDetection(image)
@@ -222,12 +223,12 @@ if __name__=="__main__":
       print("No grid detected.")
   else :
       print(f"Meilleur vote {G}")
-      mask = forgeryDetection(votes,G,12)
-      # print(votes)
-      plt.figure(2)
-      plt.imshow(mask)
-      plt.figure(0)
-      plt.imshow(votes)
-      plt.figure(1)
-      plt.imshow(votes==-1)
-      plt.show()
+  mask = forgeryDetection(votes,G,12)
+  # print(votes)
+  plt.figure(2)
+  plt.imshow(mask)
+  plt.figure(0)
+  plt.imshow(votes)
+  plt.figure(1)
+  plt.imshow(votes==-1)
+  plt.show()
