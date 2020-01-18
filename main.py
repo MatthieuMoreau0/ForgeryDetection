@@ -31,7 +31,6 @@ def dct2(block,cos_t):
   #         dct_num[i,j]*= 1/np.sqrt(2)
   #       dct_num[i,j]*= 0.25
   #       print(dct_num[i,j]-dct_test[i,j])
-
   return dct_test
 
 def computeVotes(L):
@@ -54,7 +53,6 @@ def computeVotes(L):
     for j in range(L.shape[1]-7):
       d=dct2(L[i:i+8,j:j+8],cos_t)
       z=np.sum(abs(d)<0.5)
-
       for x in range(i,i+8):
         for y in range(j,j+8):
           if z==zeros[x,y]:
@@ -66,7 +64,7 @@ def computeVotes(L):
 
 def getLuminance(I):
   '''
-  Returns the luminance of image I with weights [0.2126,0.7152,0.0722]
+  Returns the luminance of image I with weights [0.299,0.587,0.114]
 
   Parameters:
   I (array of shape(w,h,3)): Image with RGB channels
@@ -74,7 +72,7 @@ def getLuminance(I):
   Returns:
   np.array of shape (w,h): Luminance of I 
   '''
-  return np.average(image,2,weights=[0.2126,0.7152,0.0722]).astype("float32")
+  return np.average(image,2,weights=[0.299,0.587,0.114]).astype("float32")
 
 def binomTail(n,k,p):
   '''
@@ -108,7 +106,6 @@ def gridDetection(I):
     L = getLuminance(I)
   else:
     L=I
-  # X,Y,C = np.shape(I)
   votes = computeVotes(L)
   histo = np.histogram(votes,range(-1,65))
   bestGrid = np.argmax(histo[0][1:]) ##ignore votes=-1 on the histogram
@@ -164,13 +161,10 @@ def boundingBox(R):
   (int,int,int,int): bounding box of the region
   '''
   R = np.transpose(R)
-  # print("R",R)
   xmin = np.min(R[0,:])
   xmax = np.max(R[0,:])
   ymin = np.min(R[1,:])
   ymax = np.max(R[1,:])
-
-  # print("MAX",xmin,xmax,ymin,ymax)
 
   return xmin,xmax,ymin,ymax
 
