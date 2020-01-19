@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 
 
+
 def dct2(block,cos_t):
   '''
   Computes the dct2 of a 2D array
@@ -72,7 +73,7 @@ def getLuminance(I):
   Returns:
   np.array of shape (w,h): Luminance of I 
   '''
-  return np.average(image,2,weights=[0.299,0.587,0.114]).astype("float32")
+  return np.average(I,2,weights=[0.299,0.587,0.114]).astype("float32")
 
 def binomTail(n,k,p):
   '''
@@ -117,7 +118,7 @@ def gridDetection(I):
   else :
       return -1,NFA,votes
 
-def regionGrowing(votes,seed,W):
+def regionGrowing(votes,seed,W,defaultGrid):
   """
   Computes the region of pixels with same vote as the seed (we look for pixel in a window (W,W) to grow the region
 
@@ -132,6 +133,7 @@ def regionGrowing(votes,seed,W):
   queue = [seed]
   visited = np.zeros(votes.shape)
   region= [seed]
+  label = set()
   while len(queue)>0 :
       x,y=queue.pop(0)
       visited[x,y]=True
@@ -140,11 +142,14 @@ def regionGrowing(votes,seed,W):
               if (i==0 and j==0) or x+i<0 or x+i>=np.shape(votes)[0] \
               or y+j<0 or y+j>= np.shape(votes)[1]:
                   continue
-              elif not visited[x+i,y+j] and votes[x+i,y+j]==votes[x,y] :
+              
+              elif not visited[x+i,y+j] and votes[x+i,y+j]!=defaultGrid :
+                 
+                  label.add(votes[x+i,y+j])
                   visited[x+i,y+j]=True
                   region.append([x+i,y+j])
                   queue.append([x+i,y+j])
-  return region
+  return region, label
 
 
 
@@ -186,7 +191,7 @@ def forgeryDetection(votes,G,W):
   for x in tqdm.tqdm(range(len(forgerMask))):
       for y in range(len(forgerMask[0])):
           if votes[x,y]>-1 and votes[x,y]!=G:
-              R = regionGrowing(votes,[x,y],W)
+              R,label = regionGrowing(votes,[x,y],W,G)
               if len(R)<4:
                   continue
               xmin,xmax,ymin,ymax = boundingBox(R)
@@ -195,7 +200,7 @@ def forgeryDetection(votes,G,W):
               N = max(xmax-xmin+1,ymax-ymin+1)
               card = len(R)
               #NFA = 64 *X*Y*np.sqrt(X*Y)*binomTail(int(N*N/64),int(card/64),1/64) formule fausse du papier
-              NFA = 64 *Bx*By*np.sqrt(Bx*By)*binomTail(int(N*N/64),int(card/64),1/64.0)
+              NFA =  Bx*By*np.sqrt(Bx*By)*binomTail(int(N*N/64),int(card/64),1/64.0)/100
               if(len(R)>100):
                 print("Region",R[0],"longueur",len(R),"NFA",NFA)
               if NFA < 1 :
@@ -214,20 +219,36 @@ def voteColorMap(votes):
   colorMapper = lambda value: dic[value]
   return np.moveaxis(np.vectorize(colorMapper)(votes),0,-1).astype('int')
 
+
+def test_compression(Image):
+  imageCv2=cv2.imread(Image, cv2.IMREAD_UNCHANGED)
+  return gridDetection(imageCv2)
+
 if __name__=="__main__":
-  image=cv2.imread("./images/pelican_tampered.ppm", cv2.IMREAD_UNCHANGED)
-  plt.figure(0)
-  plt.imshow(image,cmap="gray")
-  G,value,votes = gridDetection(image)
-  plt.figure(1)
-  plt.imshow(voteColorMap(votes))
-  if G==-1 :
-      print("No grid detected.")
-  else :
-      print(f"Meilleur vote {G}")
-  mask = forgeryDetection(votes,G,12)
-  plt.figure(2)
-  plt.imshow(mask,cmap="gray")
-
-
-  plt.show()
+  for imageName in ["pelican_tampered_no_gaussian.ppm"] :
+    print(imageName)
+    image=cv2.imread(imageName, cv2.IMREAD_UNCHANGED)
+    plt.figure(0)
+    plt.imshow(image,cmap="gray")
+    G,value,votes = gridDetection(image)
+    plt.figure(1)
+    plt.imshow(voteColorMap(votes))
+    if G==-1 :
+        print("No grid detected.")
+    else :
+        print(f"Meilleur vote {G}")
+    mask = forgeryDetection(votes,G,12)
+    plt.figure(2)
+    plt.imshow(mask,cmap="gray")
+    # NFAlist = []
+    # compressionList = []
+    # # for k in range(18,21):
+    #   # compression = k*5
+    # for compression in [95,96,97,98,99,100]:
+    #   compressionList.append(compression)
+    #   print(f"Start determine Grid for file : foret{compression}.jpg")
+    #   bestGrid,NFA,votes = test_compression(f"foret{compression}.jpg")
+    #   print(f"Best grid is {bestGrid} with NFA {NFA}")
+    #   NFAlist.append(NFA)
+    # plt.plot(compressionList,NFAlist)
+    plt.show()
