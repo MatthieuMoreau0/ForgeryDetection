@@ -196,8 +196,6 @@ def forgeryDetection(votes,G,W):
               card = len(R)
               #NFA = 64 *X*Y*np.sqrt(X*Y)*binomTail(int(N*N/64),int(card/64),1/64) formule fausse du papier
               NFA = 64 *Bx*By*np.sqrt(Bx*By)*binomTail(int(N*N/64),int(card/64),1/64.0)
-              if(len(R)>100):
-                print("Region",R[0],"longueur",len(R),"NFA",NFA)
               if NFA < 1 :
                   forgerMask[tuple(np.transpose(R))]=True
               votes[tuple(np.transpose(R))]=-1
