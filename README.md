@@ -4,4 +4,4 @@ This code implements a JPEG forgery detection algorithm taken from the paper : [
 
 The general idea is the following : we compute the best 8x8 jpeg grid that fits our image (by computing the number of zeros in the 2D dct2 of each 8x8 block) and then we find regions of the image that follow a different grid. We apply a statistical test to detect whether these are the result of forgeries.
 
-This project is still a work in progress for the MVA course "Introduction à l'imagerie numérique", our next goals are to extend the work of the paper by generalizing the vote of the best grid for pixels that have two grids with the same number of zeros (these are currently ignored in the paper).
+This project is still a work in progress for the MVA course "Introduction à l'imagerie numérique"
