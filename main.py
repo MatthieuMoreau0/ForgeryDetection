@@ -201,7 +201,17 @@ def forgeryDetection(votes,G,W):
               votes[tuple(np.transpose(R))]=-1
   return forgerMask
 
+def getColorDict():
+  dic={}
+  for i in range(-1,65,1):
+    dic[i]=tuple(np.random.random(size=3)*255)
+  return dic
 
+def voteColorMap(votes):
+  dic=getColorDict()
+  print(dic)
+  colorMapper = lambda value: dic[value]
+  return np.moveaxis(np.vectorize(colorMapper)(votes),0,-1).astype('int')
 
 if __name__=="__main__":
   image=cv2.imread("./tampered1.pgm", cv2.IMREAD_UNCHANGED)
@@ -213,11 +223,10 @@ if __name__=="__main__":
   else :
       print(f"Meilleur vote {G}")
   mask = forgeryDetection(votes,G,12)
-  # print(votes)
-  plt.figure(2)
-  plt.imshow(mask)
   plt.figure(0)
-  plt.imshow(votes)
+  plt.imshow(mask,cmap="gray")
   plt.figure(1)
-  plt.imshow(votes==-1)
+  plt.imshow(voteColorMap(votes))
+  plt.figure(2)
+  plt.imshow(image,cmap="gray")
   plt.show()
