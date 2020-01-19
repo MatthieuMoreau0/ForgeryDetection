@@ -196,6 +196,8 @@ def forgeryDetection(votes,G,W):
               card = len(R)
               #NFA = 64 *X*Y*np.sqrt(X*Y)*binomTail(int(N*N/64),int(card/64),1/64) formule fausse du papier
               NFA = 64 *Bx*By*np.sqrt(Bx*By)*binomTail(int(N*N/64),int(card/64),1/64.0)
+              if(len(R)>100):
+                print("Region",R[0],"longueur",len(R),"NFA",NFA)
               if NFA < 1 :
                   forgerMask[tuple(np.transpose(R))]=True
               votes[tuple(np.transpose(R))]=-1
@@ -209,24 +211,23 @@ def getColorDict():
 
 def voteColorMap(votes):
   dic=getColorDict()
-  print(dic)
   colorMapper = lambda value: dic[value]
   return np.moveaxis(np.vectorize(colorMapper)(votes),0,-1).astype('int')
 
 if __name__=="__main__":
-  image=cv2.imread("./tampered1.pgm", cv2.IMREAD_UNCHANGED)
-  image=image[:,4:]
-  print(image.shape)
+  image=cv2.imread("./images/pelican_tampered.ppm", cv2.IMREAD_UNCHANGED)
+  plt.figure(0)
+  plt.imshow(image,cmap="gray")
   G,value,votes = gridDetection(image)
+  plt.figure(1)
+  plt.imshow(voteColorMap(votes))
   if G==-1 :
       print("No grid detected.")
   else :
       print(f"Meilleur vote {G}")
   mask = forgeryDetection(votes,G,12)
-  plt.figure(0)
-  plt.imshow(mask,cmap="gray")
-  plt.figure(1)
-  plt.imshow(voteColorMap(votes))
   plt.figure(2)
-  plt.imshow(image,cmap="gray")
+  plt.imshow(mask,cmap="gray")
+
+
   plt.show()
