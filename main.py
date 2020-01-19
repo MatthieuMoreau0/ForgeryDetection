@@ -110,7 +110,6 @@ def gridDetection(I):
   histo = np.histogram(votes,range(-1,65))
   bestGrid = np.argmax(histo[0][1:]) ##ignore votes=-1 on the histogram
   bestValue = np.max(histo[0][1:])
-
   NFA = 64*X*Y*np.sqrt(X*Y)*binomTail(int(X*Y/64),int(bestValue/64.),1/64.)
   print("best grid NFA", NFA)
   if NFA<1 :
@@ -198,12 +197,8 @@ def forgeryDetection(votes,G,W):
               #NFA = 64 *X*Y*np.sqrt(X*Y)*binomTail(int(N*N/64),int(card/64),1/64) formule fausse du papier
               NFA = 64 *Bx*By*np.sqrt(Bx*By)*binomTail(int(N*N/64),int(card/64),1/64.0)
               if NFA < 1 :
-                  # forgerMask[np.transpose(R)]=True
-                  for i,j in R:
-                      forgerMask[i,j]=True
-              for i,j in R :
-                  votes[i,j] = -1
-                  # forgerMask[np.transpose(R)]=True
+                  forgerMask[tuple(np.transpose(R))]=True
+              votes[tuple(np.transpose(R))]=-1
   return forgerMask
 
 
