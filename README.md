@@ -4,4 +4,7 @@ This code implements a JPEG forgery detection algorithm taken from the paper : [
 
 The general idea is the following : we compute the best 8x8 jpeg grid that fits our image (by computing the number of zeros in the 2D dct2 of each 8x8 block) and then we find regions of the image that follow a different grid. We apply a statistical test to detect whether these are the result of forgeries.
 
-This project is still a work in progress for the MVA course "Introduction à l'imagerie numérique"
+This project is still a work in progress for the MVA course "Introduction à l'imagerie numérique".
+
+Inline-style:
+![alt text](https://github.com/MatthieuMoreau0/ForgeryDetection/blob/master/images/pelican.ppm "Logo Title Text 1")
