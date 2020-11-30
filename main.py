@@ -4,8 +4,7 @@ from scipy.fftpack import dct, idct
 import scipy.stats
 import tqdm
 import matplotlib.pyplot as plt
-
-
+import argparse
 
 def dct2(block,cos_t):
   '''
@@ -19,7 +18,8 @@ def dct2(block,cos_t):
   '''
   dct_num=np.zeros(block.shape)
   dct_test = dct(dct(block.T, norm='ortho').T, norm='ortho')
-  # for i in range(8): #### Sanity check
+  #### Sanity check
+  # for i in range(8):
   #   for j in range(8):
   #     if(i+j>0):
   #       for xx in range(8):
@@ -194,7 +194,7 @@ def forgeryDetection(votes,G,W):
               By = ymax-ymin+1
               N = max(xmax-xmin+1,ymax-ymin+1)
               card = len(R)
-              #NFA = 64 *X*Y*np.sqrt(X*Y)*binomTail(int(N*N/64),int(card/64),1/64) formule fausse du papier
+              #NFA = 64 *X*Y*np.sqrt(X*Y)*binomTail(int(N*N/64),int(card/64),1/64) #formula given in the paper, but inexact
               NFA = 64 *Bx*By*np.sqrt(Bx*By)*binomTail(int(N*N/64),int(card/64),1/64.0)
               if NFA < 1 :
                   forgerMask[tuple(np.transpose(R))]=True
@@ -213,7 +213,10 @@ def voteColorMap(votes):
   return np.moveaxis(np.vectorize(colorMapper)(votes),0,-1).astype('int')
 
 if __name__=="__main__":
-  image=cv2.imread("./images/pelican_tampered.ppm", cv2.IMREAD_UNCHANGED)
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--path", help="Path of the image to analyse", type=str)
+  args = parser.parse_args()
+  image=cv2.imread(args.path, cv2.IMREAD_GRAYSCALE)
   plt.figure(0)
   plt.imshow(image,cmap="gray")
   G,value,votes = gridDetection(image)
@@ -226,6 +229,5 @@ if __name__=="__main__":
   mask = forgeryDetection(votes,G,12)
   plt.figure(2)
   plt.imshow(mask,cmap="gray")
-
 
   plt.show()
